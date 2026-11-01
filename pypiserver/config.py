@@ -120,7 +120,7 @@ class DEFAULTS:
     LOG_REQ_FRMT = "%(bottle.request)s"
     LOG_RES_FRMT = "%(status)s"
     LOG_STREAM = sys.stdout
-    PACKAGE_DIRECTORIES = [pathlib.Path("~/packages").expanduser().resolve()]
+    PACKAGE_DIRECTORIES = [pathlib.Path("C:/Users/Owner/Desktop/my-packages").resolve()]
     PORT = 8080
     SERVER_METHOD = "auto"
     BACKEND = "auto"
@@ -705,7 +705,7 @@ class _ConfigCommon:
             for k, v in self
             if k not in self._derived_properties
         )
-
+    
     def __iter__(self) -> t.Iterator[t.Tuple[str, t.Any]]:
         """Iterate over config (k, v) pairs."""
         yield from (
@@ -760,9 +760,7 @@ class RunConfig(_ConfigCommon):
         self.auther = self.get_auther(auther)
 
     @classmethod
-    def kwargs_from_namespace(
-        cls, namespace: argparse.Namespace
-    ) -> t.Dict[str, t.Any]:
+    def kwargs_from_namespace(cls, namespace: argparse.Namespace) -> t.Dict[str, t.Any]:
         """Convert a namespace into __init__ kwargs for this class."""
         return {
             **super(RunConfig, cls).kwargs_from_namespace(namespace),

@@ -9,6 +9,7 @@ from io import BytesIO
 from json import dumps
 from urllib.parse import quote, urljoin, urlparse
 from xml.parsers.expat import ExpatError
+import json
 
 import defusedxml.minidom
 from defusedxml.common import DefusedXmlException
@@ -421,8 +422,88 @@ def json_info(project):
     return dumps(rv)
 
 
+
+# @app.route("/api/packages")
+# def api_packages():
+#     """API endpoint to get all packages for the UI."""
+#     packages = []
+#     for pkg in config.backend.get_all_packages():
+#         packages.append({
+#             "name": pkg.pkgname,
+#             "version": pkg.version,
+#             "filename": pkg.relfn,
+#             "url": f"/packages/{pkg.relfn}",
+#             "install_cmd": f"pip install --index-url {request.url.replace('/api/packages', '/simple/')} {pkg.pkgname}"
+#         })
+    
+#     response.content_type = "application/json"
+#     return json.dumps({
+#         "count": len(packages),
+#         "packages": packages
+#     })
+
+
+import os
+from datetime import datetime
+
+@app.route("/api/graph")
+def api_graph():
+    """API endpoint to get packages as a graph with detailed stats."""
+    nodes = []
+    edges = []
+    
+    # 1. العقدة المركزية
+    nodes.append({"id": "server", "value": 1, "label": "Pypiserver", "parentId": None})
+    
+    packages = {}
+    for pkg in config.backend.get_all_packages():
+        pkg_name = pkg.pkgname
+        if pkg_name not in packages:
+            packages[pkg_name] = {"files": [], "total_size": 0, "last_updated": 0}
+        
+        packages[pkg_name]["files"].append(pkg)
+        
+        if pkg.fn and os.path.exists(pkg.fn):
+            packages[pkg_name]["total_size"] += os.path.getsize(pkg.fn)
+            mtime = os.path.getmtime(pkg.fn)
+            if mtime > packages[pkg_name]["last_updated"]:
+                packages[pkg_name]["last_updated"] = mtime
+    
+    # 2. إضافة الحزم
+    for pkg_name, info in packages.items():
+        nodes.append({
+            "id": pkg_name, 
+            "value": len(info["files"]), 
+            "label": pkg_name, 
+            "parentId": "server",
+            "size": info["total_size"],
+            "files_count": len(info["files"]),
+            "last_updated": datetime.fromtimestamp(info["last_updated"]).strftime("%Y-%m-%d") if info["last_updated"] else "N/A"
+        })
+        edges.append({"id": f"server->{pkg_name}", "source": "server", "target": pkg_name})
+        
+        # 3. إضافة الإصدارات
+        for pkg in info["files"]:
+            version_id = f"{pkg_name}_{pkg.version}"
+            if not any(n["id"] == version_id for n in nodes):
+                nodes.append({
+                    "id": version_id, 
+                    "value": 1, 
+                    "label": pkg.version, 
+                    "parentId": pkg_name
+                })
+                edges.append({"id": f"{pkg_name}->{version_id}", "source": pkg_name, "target": version_id})
+
+    response.content_type = "application/json"
+    return json.dumps({"nodes": nodes, "edges": edges})
+
+
+
 @app.route("/:project")
 @app.route("/:project/")
 def bad_url(project):
     """Redirect unknown root URLs to /simple/."""
     return redirect(get_bad_url_redirect_path(request, project))
+
+
+

@@ -1,38 +1,1503 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <title>Welcome to pypiserver!</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pypiserver – Control Panel</title>
+    <style>
+        /* ===== Colors: change everything from here (or use the palette button in the page) ===== */
+        :root {
+            --bg: #07070a;
+            --text: #f4f4f6;
+            --muted: #8c8c9a;
+            --mix: #fff;
+            --accent: #8b7cff;
+            --gold: #e8c27a;
+            --pink: #ff6b9a;
+            --success: #3ddc97;
+            --danger: #ff5a5f;
+            --surface: color-mix(in srgb, var(--bg) 93%, var(--mix));
+            --surface-2: color-mix(in srgb, var(--bg) 87%, var(--mix));
+            --border: color-mix(in srgb, var(--bg) 82%, var(--mix));
+            --glow: color-mix(in srgb, var(--accent) 22%, transparent);
+            --glass: color-mix(in srgb, var(--surface) 82%, transparent);
+            --r: 18px;
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f3f3f8;
+            --text: #14141a;
+            --muted: #686878;
+            --mix: #000
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0
+        }
+
+        body {
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: var(--text);
+            font-size: 18px;
+            background: radial-gradient(ellipse at 30% 45%, var(--surface-2) 0%, var(--bg) 68%) fixed
+        }
+
+        button,
+        input {
+            font: inherit;
+            color: inherit
+        }
+
+        .ic {
+            width: 1em;
+            height: 1em;
+            vertical-align: -.125em;
+            flex: none
+        }
+
+        i[data-i] {
+            display: inline-grid;
+            place-items: center;
+            font-style: normal
+        }
+
+        .app {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column
+        }
+
+        /* top bar */
+        .top {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .brand b {
+            display: block;
+            font-size: 14px
+        }
+
+        .brand small {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 18px;
+            color: var(--accent);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: 0 0 18px var(--glow)
+        }
+
+        .tools,
+        .right {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .ib {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: .18s
+        }
+
+        .ib:hover {
+            background: var(--surface-2);
+            transform: translateY(-1px);
+            border-color: color-mix(in srgb, var(--accent) 50%, var(--border))
+        }
+
+        .ib.ghost {
+            border-color: transparent;
+            background: transparent;
+            color: var(--muted)
+        }
+
+        .ib.ghost:hover {
+            color: var(--text)
+        }
+
+        .ib.accent {
+            background: var(--accent);
+            border-color: transparent;
+            color: #fff
+        }
+
+        .ib.sm {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 14px
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            transition: .18s
+        }
+
+        .btn:hover {
+            background: var(--surface-2);
+            border-color: color-mix(in srgb, var(--accent) 50%, var(--border))
+        }
+
+        .btn.sm {
+            padding: 5px 10px;
+            font-size: 12px;
+            display: inline-flex;
+            gap: 4px;
+            align-items: center
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent), var(--pink))
+        }
+
+        .notice {
+            padding: 7px 18px;
+            font-size: 12px;
+            color: var(--muted);
+            background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+            border-block: 1px solid var(--border)
+        }
+
+        /* palette */
+        .pop-wrap {
+            position: relative
+        }
+
+        .popover {
+            position: absolute;
+            right: 0;
+            top: 44px;
+            z-index: 20;
+            width: 250px;
+            padding: 14px;
+            border-radius: var(--r);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .45);
+            display: grid;
+            gap: 10px
+        }
+
+        .popover[hidden] {
+            display: none
+        }
+
+        .popover h4 {
+            margin: 0;
+            font-size: 13px
+        }
+
+        .popover label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .popover input[type=color] {
+            width: 42px;
+            height: 26px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: none;
+            padding: 0;
+            cursor: pointer
+        }
+
+        .presets {
+            display: flex;
+            gap: 8px
+        }
+
+        .sw {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: .15s
+        }
+
+        .sw:hover {
+            transform: scale(1.15)
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between
+        }
+
+        /* layout */
+        main {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            gap: 16px;
+            padding: 16px 18px
+        }
+
+        .stagebox {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+            height: calc(100vh - 140px);
+            min-height: 540px
+        }
+
+        .graph {
+            position: absolute;
+            inset: 0;
+            overflow: auto;
+            border-radius: var(--r);
+            border: 1px solid var(--border);
+            cursor: default;
+            touch-action: pan-x;
+            background: radial-gradient(circle 300px at var(--mx, 30%) var(--my, 50%), color-mix(in srgb, var(--accent) 12%, transparent), transparent),
+                radial-gradient(circle at 14% 50%, var(--glow), transparent 45%),
+                radial-gradient(color-mix(in srgb, var(--mix) 7%, transparent) 1px, transparent 1px) 0 0/22px 22px
+        }
+
+        .graph:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px
+        }
+
+        #stage {
+            position: relative;
+            transform-origin: 0 0
+        }
+
+        #edges {
+            position: absolute;
+            inset: 0;
+            overflow: visible
+        }
+
+        #edges path {
+            fill: none;
+            stroke-width: 1.2
+        }
+
+        #edges path.wl {
+            stroke: color-mix(in srgb, var(--muted) 45%, transparent);
+            transition: stroke .3s
+        }
+
+        #edges path.hot {
+            stroke: var(--gold);
+            stroke-width: 1.2;
+            filter: drop-shadow(0 0 3px var(--gold));
+            stroke-dasharray: 6 5;
+            animation: flow 1.4s linear infinite
+        }
+
+        #edges path.focus {
+            stroke-width: 1.8
+        }
+
+        @keyframes flow {
+            to {
+                stroke-dashoffset: -22
+            }
+        }
+
+        #edges .decor line {
+            stroke: var(--muted);
+            stroke-width: 1
+        }
+
+        #edges .decor path {
+            stroke: var(--border);
+            stroke-dasharray: 2 5;
+            stroke-width: 1
+        }
+
+        #edges .decor path.ptr {
+            fill: var(--gold);
+            stroke: none;
+            stroke-dasharray: none;
+            filter: drop-shadow(0 0 6px var(--gold))
+        }
+
+        /* overlays */
+        .ov {
+            position: absolute;
+            z-index: 3;
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+
+        .ov.tl {
+            left: 14px;
+            top: 14px
+        }
+
+        .ov.tr {
+            right: 14px;
+            top: 14px
+        }
+
+        .ov.bl {
+            left: 16px;
+            bottom: 14px;
+            font-size: 11px;
+            color: var(--muted);
+            gap: 14px;
+            flex-wrap: wrap;
+            pointer-events: none
+        }
+
+        .search {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 7px 11px;
+            border-radius: 12px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+            min-width: 230px;
+            color: var(--muted)
+        }
+
+        .search:focus-within {
+            border-color: var(--accent);
+            color: var(--text)
+        }
+
+        .search input {
+            flex: 1;
+            background: none;
+            border: 0;
+            outline: 0;
+            min-width: 0
+        }
+
+        .search input::placeholder {
+            color: var(--muted)
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .chip b {
+            color: var(--text);
+            font-weight: 600
+        }
+
+        .ov.bl span {
+            display: flex;
+            gap: 6px;
+            align-items: center
+        }
+
+        .ov.bl i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: block
+        }
+
+        /* hub */
+        .node {
+            position: absolute;
+            transform: translate(-50%, -50%)
+        }
+
+        .central {
+            width: 200px;
+            text-align: center;
+            display: grid;
+            justify-items: center;
+            gap: 12px
+        }
+
+        .central .t {
+            font-weight: 600;
+            font-size: 14px
+        }
+
+        .orbwrap {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            display: grid;
+            place-items: center
+        }
+
+        .orb {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 34px;
+            color: var(--accent);
+            cursor: pointer;
+            background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--accent) 55%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));
+            border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+            animation: pulse 3.2s ease-in-out infinite;
+            transition: transform .2s
+        }
+
+        .orb:hover {
+            transform: scale(1.06)
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px var(--accent)
+            }
+
+            50% {
+                box-shadow: 0 0 55px var(--accent)
+            }
+        }
+
+        .ring {
+            position: absolute;
+            inset: -16px;
+            border-radius: 50%;
+            border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+            animation: spin 20s linear infinite
+        }
+
+        .ring.r2 {
+            inset: -30px;
+            border-style: dotted;
+            opacity: .6;
+            animation-duration: 34s;
+            animation-direction: reverse
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(1turn)
+            }
+        }
+
+        .central small {
+            color: var(--muted);
+            font-size: 12px;
+            display: flex;
+            gap: 4px;
+            align-items: center
+        }
+
+        /* wheel pills */
+        .term {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            white-space: nowrap;
+            font-size: 12.5px;
+            padding: 6px 8px 6px 10px;
+            border-radius: 999px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transform-origin: 0 50%;
+            opacity: 0;
+            pointer-events: none;
+            color: var(--text);
+            transition: background .2s, border-color .2s, box-shadow .2s
+        }
+
+        .term .nm {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px
+        }
+
+        .term.ver .nm {
+            max-width: 90px
+        }
+
+        .term em {
+            font-style: normal;
+            color: var(--muted);
+            background: var(--surface-2);
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-size: 11px
+        }
+
+        .term.pkg .ic {
+            color: var(--accent)
+        }
+
+        .term.ver .ic {
+            color: var(--gold)
+        }
+
+        .term.focus {
+            border-color: color-mix(in srgb, var(--text) 35%, var(--border))
+        }
+
+        .term.sel {
+            border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+            box-shadow: 0 0 22px var(--glow)
+        }
+
+        .term.ver.focus,
+        .term.ver.sel {
+            border-color: var(--gold);
+            background: color-mix(in srgb, var(--gold) 13%, var(--surface));
+            box-shadow: 0 0 20px color-mix(in srgb, var(--gold) 32%, transparent)
+        }
+
+        .term.sel em {
+            background: var(--accent);
+            color: #fff
+        }
+
+        .term.ver.sel em,
+        .term.ver.focus em {
+            background: var(--gold);
+            color: #16130a
+        }
+
+        .hint,
+        .empty {
+            position: absolute;
+            transform: translate(0, -50%);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            color: var(--muted);
+            font-size: 13px;
+            pointer-events: none
+        }
+
+        .hint {
+            animation: nudge 2.2s ease-in-out infinite
+        }
+
+        .hint i {
+            transform: rotate(180deg)
+        }
+
+        .hint.gone,
+        .empty.gone {
+            display: none
+        }
+
+        @keyframes nudge {
+            50% {
+                transform: translate(-10px, -50%)
+            }
+        }
+
+        /* right panel */
+        .panel {
+            width: 370px;
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 20px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+            max-height: calc(100vh - 140px);
+            overflow: auto
+        }
+
+        .panel.swap {
+            animation: fade .35s ease
+        }
+
+        @keyframes fade {
+            from {
+                opacity: .3;
+                transform: translateY(6px)
+            }
+        }
+
+        .sector {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 19px;
+            line-height: 1.3;
+            word-break: break-word
+        }
+
+        .sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 12px
+        }
+
+        .status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center
+        }
+
+        .upd {
+            flex: 1;
+            min-width: 120px;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .badge {
+            padding: 3px 9px;
+            border-radius: 7px;
+            background: var(--surface-2);
+            font-size: 12px;
+            font-weight: 500
+        }
+
+        .badge.success {
+            color: var(--success)
+        }
+
+        .badge.purple {
+            color: var(--accent)
+        }
+
+        .badge.muted {
+            color: var(--muted)
+        }
+
+        .badge.gold {
+            color: var(--gold)
+        }
+
+        .sent-h {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .sent {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 8px;
+            gap: 10px
+        }
+
+        .big {
+            font-size: 46px;
+            font-weight: 700;
+            color: var(--pink);
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            gap: 4px
+        }
+
+        .big small {
+            font-size: 16px;
+            color: var(--muted);
+            font-weight: 500
+        }
+
+        .bars {
+            display: flex;
+            gap: 9px;
+            align-items: flex-end;
+            height: 64px
+        }
+
+        .bars div {
+            display: grid;
+            justify-items: center;
+            gap: 3px;
+            font-size: 10px;
+            color: var(--muted);
+            max-width: 54px
+        }
+
+        .bars div span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 54px
+        }
+
+        .bars i {
+            display: block;
+            width: 16px;
+            border-radius: 4px 4px 2px 2px;
+            background: linear-gradient(var(--pink), color-mix(in srgb, var(--pink) 25%, transparent));
+            transition: height .5s
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .stat {
+            padding: 12px;
+            border-radius: var(--r);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: grid;
+            gap: 3px;
+            transition: .2s;
+            min-width: 0
+        }
+
+        .stat:hover {
+            border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+            transform: translateY(-2px)
+        }
+
+        .stat .ic {
+            color: var(--muted);
+            font-size: 16px
+        }
+
+        .stat b {
+            font-size: 24px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .stat span {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.3
+        }
+
+        .ai-h {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 8px;
+            color: var(--accent)
+        }
+
+        .cmd {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start
+        }
+
+        .cmd code {
+            flex: 1;
+            display: block;
+            background: var(--surface-2);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: ui-monospace, Menlo, monospace;
+            font-size: 11px;
+            color: var(--gold);
+            word-break: break-all;
+            border: 1px solid var(--border)
+        }
+
+        .card .sub {
+            margin-top: 8px
+        }
+
+        .chat {
+            margin-top: auto;
+            display: grid;
+            gap: 8px
+        }
+
+        .log {
+            display: grid;
+            gap: 6px;
+            max-height: 110px;
+            overflow: auto
+        }
+
+        .msg {
+            font-size: 12px;
+            padding: 7px 10px;
+            border-radius: 10px;
+            background: var(--surface-2);
+            width: fit-content;
+            max-width: 90%
+        }
+
+        .msg.me {
+            justify-self: end;
+            background: color-mix(in srgb, var(--accent) 30%, transparent)
+        }
+
+        .input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border)
+        }
+
+        .input:focus-within {
+            border-color: var(--accent)
+        }
+
+        .input input {
+            flex: 1;
+            background: none;
+            border: 0;
+            outline: 0;
+            min-width: 0
+        }
+
+        .input input::placeholder {
+            color: var(--muted)
+        }
+
+        .agent {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .agent em {
+            font-style: normal;
+            background: var(--surface-2);
+            padding: 0 6px;
+            border-radius: 5px
+        }
+
+        .agent .ai {
+            margin-left: auto;
+            color: var(--accent)
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translate(-50%, 20px);
+            opacity: 0;
+            pointer-events: none;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            padding: 9px 16px;
+            border-radius: 10px;
+            transition: .25s;
+            z-index: 30
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0)
+        }
+
+        @media (max-width:1024px) {
+            main {
+                flex-direction: column
+            }
+
+            .stagebox {
+                height: 600px;
+                min-height: 0
+            }
+
+            .panel {
+                width: 100%;
+                max-height: none
+            }
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            * {
+                animation: none !important;
+                transition: none !important
+            }
+        }
+    </style>
 </head>
 
 <body>
-  <h1>
-    أهلا وسهلًا بكم في مشروعنا المتواضع
-  </h1>
-  <p>
-    This is a PyPI compatible package index serving {{NUMPKGS}} packages.
-  </p>
-  <p>
-    To use this server with <code>pip</code>, run the following command:
-  <pre>
-        <code>pip install --index-url {{URL}}simple/ PACKAGE [PACKAGE2...]</code>
-      </pre>
-  </p>
-  <p>
-    To use this server with <code>easy_install</code>, run the following command:
-  <pre>
-        <code>easy_install --index-url {{URL}}simple/ PACKAGE [PACKAGE2...]</code>
-      </pre>
-  </p>
-  <p>
-    The complete list of all packages can be found <a href="{{PACKAGES}}">here</a> or via the <a
-      href="{{SIMPLE}}">simple</a> index.
-  </p>
-  <p>
-    This instance is running version {{VERSION}} of the <a href="https://pypi.org/project/pypiserver/">pypiserver</a>
-    software.
-  </p>
+    <div class="app">
+        <header class="top">
+            <div class="brand">
+                <span class="logo"><i data-i="server"></i></span>
+                <div><b>Pypiserver</b><small>Control Panel</small></div>
+            </div>
+            <div class="tools">
+                <button class="ib" data-tool="people" title="People"><i data-i="users"></i></button>
+                <button class="ib" data-tool="list" title="List view"><i data-i="list"></i></button>
+                <button class="ib" data-tool="zoom-in" title="Zoom in"><i data-i="plus"></i></button>
+                <button class="ib" data-tool="zoom-out" title="Zoom out"><i data-i="minus"></i></button>
+                <button class="ib" data-tool="share" title="Share"><i data-i="share"></i></button>
+                <button class="ib" data-tool="fullscreen" title="Fullscreen"><i data-i="max"></i></button>
+            </div>
+            <div class="right">
+                <button class="btn" id="reloadBtn">↻ Reload data</button>
+                <div class="pop-wrap">
+                    <button class="ib ghost" id="paletteBtn" title="Colors"><i data-i="pal"></i></button>
+                    <div class="popover" id="palette" hidden>
+                        <h4>Colors</h4>
+                        <div class="presets" id="presets"></div>
+                        <label>Background <input type="color" data-var="--bg"></label>
+                        <label>Accent <input type="color" data-var="--accent"></label>
+                        <label>Lines <input type="color" data-var="--gold"></label>
+                        <label>Highlight <input type="color" data-var="--pink"></label>
+                        <div class="row">
+                            <button class="btn sm" id="themeBtn"><i data-i="sun"></i> Light / Dark</button>
+                            <button class="btn sm" id="resetBtn">Reset</button>
+                        </div>
+                    </div>
+                </div>
+                <span class="avatar">A</span>
+            </div>
+        </header>
+        <div class="notice" id="notice">Package repository overview – pick a package, then spin its versions</div>
+
+        <main>
+            <div class="stagebox">
+                <section class="graph" id="graph" tabindex="0" aria-label="Packages graph">
+                    <div id="wrap">
+                        <div id="stage"><svg id="edges"></svg>
+                            <div class="hint gone" id="hint"><i data-i="chevr"></i> Pick a package to open its versions
+                            </div>
+                            <div class="empty" id="empty">Loading packages…</div>
+                        </div>
+                    </div>
+                </section>
+                <div class="ov tl"><label class="search"><i data-i="search"></i><input id="filter"
+                            placeholder="Filter packages..." autocomplete="off"></label></div>
+                <div class="ov tr"><span class="chip" id="count"></span></div>
+                <div class="ov bl"><span><i></i>Scroll or drag to spin</span><span><i></i>Click to
+                        select</span><span><i></i>↑ ↓ to step</span><span><i></i>Esc to go back</span></div>
+            </div>
+
+            <aside class="panel" id="panel">
+                <div class="sector" id="pSector"></div>
+                <h2 id="pTitle"></h2>
+                <p class="sub" id="pSub"></p>
+                <div class="card status"><span class="badge" id="pStatus"></span><span class="upd" id="pUpd"></span>
+                </div>
+                <div class="card">
+                    <div class="sent-h"><span id="pBigT"></span><span class="badge muted" id="pLabel"></span></div>
+                    <div class="sent">
+                        <div class="big" id="pRate"></div>
+                        <div class="bars" id="pBars"></div>
+                    </div>
+                </div>
+                <div class="stats" id="pStats"></div>
+                <div class="card">
+                    <div class="ai-h"><i data-i="spark"></i><span id="pCmdT"></span></div>
+                    <div class="cmd"><code id="pCmd"></code><button class="ib sm" id="copyCmd" title="Copy"><i
+                                data-i="copy"></i></button></div>
+                    <p class="sub" id="pAiT"></p>
+                </div>
+                <div class="chat">
+                    <div class="log" id="log"></div>
+                    <div class="input">
+                        <input id="q" placeholder="Ask: package name, latest requests, total..." autocomplete="off">
+                        <button class="ib accent sm" id="send" title="Send"><i data-i="send"></i></button>
+                    </div>
+                    <div class="agent">
+                        <span><i data-i="bot"></i> My agent <em>3</em></span><i data-i="pen"></i>
+                        <span class="ai"><i data-i="net"></i> AI Analysis</span>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+        /* ===== ICONS ===== */
+        const ICONS = {
+            radar: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 12l6-6"/>',
+            file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+            users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.5 2.6 3.5 5.5"/>',
+            list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+            plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>',
+            share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.6l6.8-4M8.6 13.4l6.8 4"/>',
+            max: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+            search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+            chevr: '<path d="M9 6l6 6-6 6"/>',
+            shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 9v6M9 12h6"/>',
+            spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
+            send: '<path d="M12 19V5M5 12l7-7 7 7"/>', pen: '<path d="M4 20l4-1 11-11-3-3L5 16z"/>',
+            net: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8 7l8 1M7 8l4 8M17 10l-4 6"/>',
+            bot: '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/>',
+            svc: '<path d="M3 18h18M5 18a7 7 0 0 1 14 0M12 7v4M10 7h4"/>',
+            pal: '<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2-.6-1.2.2-2.5 1.6-2.5H17a4 4 0 0 0 4-4C21 7 17 3 12 3z"/><path d="M7.5 11h.01M10 7.5h.01M14.5 7.5h.01"/>',
+            sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+            server: '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01M12 7.5h5M12 16.5h5"/>',
+            box: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+            tag: '<path d="M20 12l-8 8-9-9V3h8z"/><path d="M7.5 7.5h.01"/>',
+            copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+            check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+        };
+        const icon = (n) => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ICONS.file}</svg>`;
+        const paintIcons = (root = document) => root.querySelectorAll("i[data-i]").forEach((e) => { e.innerHTML = icon(e.dataset.i); e.removeAttribute("data-i"); });
+
+        /* ===== HELPERS ===== */
+        const $ = (s) => document.querySelector(s);
+        const NS = "http://www.w3.org/2000/svg";
+        const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+        const rad = (d) => d * Math.PI / 180, ease = (v) => v * (2 - v);
+        const el = (html) => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; };
+        const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const ORIGIN = location.origin.startsWith("http") ? location.origin : "http://localhost:8080";
+        const toast = (t) => { const e = $("#toast"); e.textContent = t; e.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("show"), 1800); };
+        const fmtSize = (b) => {
+            if (!b) return { v: 0, u: "", d: 0, none: true };
+            const U = ["B", "KB", "MB", "GB", "TB"]; let i = 0, v = b;
+            while (v >= 1024 && i < U.length - 1) { v /= 1024; i++; }
+            return { v: +v.toFixed(1), u: U[i], d: 1 };
+        };
+        const cmpVer = (a, b) => {
+            const A = String(a).split(/[.\-+]/), B = String(b).split(/[.\-+]/);
+            for (let i = 0; i < Math.max(A.length, B.length); i++) {
+                const x = parseInt(A[i]), y = parseInt(B[i]);
+                if (isNaN(x) || isNaN(y)) { const c = String(A[i] ?? "").localeCompare(String(B[i] ?? "")); if (c) return c; }
+                else if (x !== y) return x - y;
+            }
+            return 0;
+        };
+
+        /* ===== DATA (from your server: GET /api/graph) ===== */
+        const DB = { pkgs: [], versions: {}, demo: false };
+        let view = [], selPkg = null, selVer = null, scale = 1;
+        const L = { minH: 560, minW: 860 };
+
+        function ingest(data) {
+            const nodes = data.nodes || [], edges = data.edges || data.links || [];
+            const byId = {}; nodes.forEach((n) => (byId[n.id] = n));
+            const pkgs = nodes.filter((n) => n.group === "package");
+            const ids = new Set(pkgs.map((p) => p.id));
+            const versions = {}; pkgs.forEach((p) => (versions[p.id] = []));
+            const parentOf = {};
+            edges.forEach((e) => {
+                const a = e.from ?? e.source, b = e.to ?? e.target;
+                if (ids.has(a) && byId[b]?.group === "version") parentOf[b] = a;
+                else if (ids.has(b) && byId[a]?.group === "version") parentOf[a] = b;
+            });
+            nodes.filter((n) => n.group === "version").forEach((v) => {
+                let p = parentOf[v.id];
+                if (!p) { const i = v.id.lastIndexOf("_"); p = ids.has(v.id.slice(0, i)) ? v.id.slice(0, i) : [...ids].find((id) => v.id.startsWith(id + "_")); }
+                if (p && versions[p]) versions[p].push(v);
+            });
+            Object.values(versions).forEach((a) => a.sort((x, y) => cmpVer(y.label, x.label)));
+            pkgs.sort((a, b) => String(a.label).localeCompare(String(b.label)));
+            DB.pkgs = pkgs; DB.versions = versions;
+        }
+        function demoData() { // only used when the server is not reachable (so you can preview the design)
+            let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647, nodes = [];
+            ["requests", "numpy", "pandas", "flask", "django", "fastapi", "pydantic", "sqlalchemy", "pytest", "black", "click", "rich", "httpx", "uvicorn", "celery", "boto3", "scipy", "pillow"].forEach((n) => {
+                nodes.push({ id: n, label: n, group: "package", size: Math.round(rnd() * 40e6 + 2e5), files_count: 3 + Math.floor(rnd() * 30), last_updated: "2025-0" + (1 + Math.floor(rnd() * 9)) + "-" + (10 + Math.floor(rnd() * 18)) });
+                const cnt = 3 + Math.floor(rnd() * 8), M = 1 + Math.floor(rnd() * 3), m = Math.floor(rnd() * 8);
+                for (let i = 0; i < cnt; i++) { const lab = `${M}.${m + i}.${Math.floor(rnd() * 5)}`; nodes.push({ id: `${n}_${lab}`, label: lab, group: "version", size: Math.round(rnd() * 9e6 + 1e5), files_count: 1 + Math.floor(rnd() * 3), last_updated: "2024-" + (10 + Math.floor(rnd() * 3)) + "-" + (10 + Math.floor(rnd() * 18)) }); }
+            });
+            return { nodes, edges: [] };
+        }
+        const sizeOfPkg = (p) => p.size ?? (DB.versions[p.id] || []).reduce((a, v) => a + (v.size || 0), 0);
+
+        /* ===== STAGE ===== */
+        const graph = $("#graph"), stage = $("#stage"), svg = $("#edges"), wrap = $("#wrap");
+        const hub = { x: 130, y: 280 };
+        function addPath(cls = "") { const p = document.createElementNS(NS, "path"); if (cls) p.setAttribute("class", cls); svg.append(p); return p; }
+
+        /* ===== WHEEL: a curved list that spins. Only the visible items are drawn, so any number of items works ===== */
+        class Wheel {
+            constructor(o) {
+                Object.assign(this, {
+                    arc: 68, step: 13, R: 200, cx: 0, cy: 0, items: [], rot: 0, vel: 0, target: null, vis: 0, visTarget: 0,
+                    drag: false, activeId: null, hotAll: false, hidden: true, kind: "pkg"
+                }, o);
+                this.n = Math.ceil(2 * this.arc / this.step) + 3;
+                this.g = document.createElementNS(NS, "g"); this.g.setAttribute("class", "decor"); svg.append(this.g);
+                const mk = (t, c = "") => { const e = document.createElementNS(NS, t); if (c) e.setAttribute("class", c); this.g.append(e); return e; };
+                this.arcIn = mk("path"); this.arcOut = mk("path"); this.ptr = mk("path", "ptr");
+                this.ticks = Array.from({ length: 72 }, () => mk("line"));
+                this.pills = []; this.paths = [];
+                for (let i = 0; i < this.n; i++) {
+                    const p = el(`<button class="term ${this.kind}" tabindex="-1">${icon(this.kind === "pkg" ? "box" : "tag")}<span class="nm"></span><em></em></button>`);
+                    p._wheel = this; stage.append(p); this.pills.push(p); this.paths.push(addPath("wl"));
+                }
+            }
+            max() { return Math.max(0, (this.items.length - 1) * this.step); }
+            setItems(items) { this.items = items; this.rot = 0; this.vel = 0; this.target = null; }
+            indexOfId(id) { return this.items.findIndex((i) => i.id === id); }
+            toFront(k) { this.target = clamp(k * this.step, 0, this.max()); this.vel = 0; }
+            stepBy(n) { this.target = clamp((Math.round(this.rot / this.step) + n) * this.step, 0, this.max()); this.vel = 0; }
+            spin(d) { this.target = null; this.vel = 0; this.rot = clamp(this.rot + d, -this.step * 0.5, this.max() + this.step * 0.5); }
+            rightEdge(i) {
+                const R = this.R * ease(Math.min(1, this.vis)), a = clamp(i * this.step - this.rot, -this.arc, this.arc), p = this.pills[i % this.n];
+                return { x: this.cx + R * Math.cos(rad(a)) + ((p._k === i ? p._w : 0) || 150) * 0.9, y: this.cy + R * Math.sin(rad(a)) };
+            }
+            update(dt) {
+                if (this.drag || (this.visTarget === 0 && this.vis < 0.004)) return;
+                const max = this.max();
+                if (this.target != null) { this.rot += (this.target - this.rot) * Math.min(1, dt * 9); if (Math.abs(this.target - this.rot) < 0.05) { this.rot = this.target; this.target = null; } }
+                else if (Math.abs(this.vel) > 2) { this.rot += this.vel * dt; this.vel *= Math.pow(0.04, dt); }
+                else { this.vel = 0; const s = clamp(Math.round(this.rot / this.step) * this.step, 0, max); this.rot += (s - this.rot) * Math.min(1, dt * 7); }
+                if (this.rot < 0 || this.rot > max) { this.rot += (clamp(this.rot, 0, max) - this.rot) * Math.min(1, dt * 10); this.vel *= 0.5; }
+            }
+            draw(anchor) {
+                if (this.visTarget === 0 && this.vis < 0.004) {
+                    if (!this.hidden) { this.hidden = true; this.g.style.display = "none"; this.pills.forEach((p, i) => { p.style.opacity = 0; p.style.pointerEvents = "none"; this.paths[i].style.opacity = 0; }); }
+                    return;
+                }
+                if (this.hidden) { this.hidden = false; this.g.style.display = ""; }
+                const { cx, cy, arc, step } = this, e = ease(Math.min(1, this.vis)), R = this.R * e, a2 = rad(arc + 3);
+                const arcD = (r) => `M${cx + r * Math.cos(-a2)} ${cy + r * Math.sin(-a2)} A${r} ${r} 0 0 1 ${cx + r * Math.cos(a2)} ${cy + r * Math.sin(a2)}`;
+                this.arcIn.setAttribute("d", arcD(R - 34)); this.arcOut.setAttribute("d", arcD(R + 34));
+                this.arcIn.style.opacity = this.arcOut.style.opacity = e;
+                this.ticks.forEach((t, j) => {
+                    const a = (((j * 5 - this.rot + 180) % 360) + 360) % 360 - 180, f = Math.abs(a) / (arc + 3);
+                    if (f > 1) { t.style.opacity = 0; return; }
+                    const long = j % 6 === 0, r1 = R - 37, r2 = r1 - (long ? 11 : 5), c = Math.cos(rad(a)), s = Math.sin(rad(a));
+                    t.setAttribute("x1", cx + r1 * c); t.setAttribute("y1", cy + r1 * s); t.setAttribute("x2", cx + r2 * c); t.setAttribute("y2", cy + r2 * s);
+                    t.style.opacity = (1 - f) * e * (long ? 0.9 : 0.45);
+                });
+                this.ptr.setAttribute("d", `M${cx + R - 46} ${cy} l-10 -6 l0 12 z`); this.ptr.style.opacity = e;
+                const n = this.items.length, kmin = Math.max(0, Math.ceil((this.rot - arc) / step)), kmax = Math.min(n - 1, Math.floor((this.rot + arc) / step)), used = new Set();
+                for (let k = kmin; k <= kmax; k++) {
+                    const a = k * step - this.rot, f = Math.abs(a) / arc, slot = k % this.n, pill = this.pills[slot], item = this.items[k];
+                    used.add(slot);
+                    if (pill._k !== k || pill._it !== this.items) { pill._k = k; pill._it = this.items; this.render(pill, item, k); pill._w = pill.offsetWidth; }
+                    const op = (1 - f * f * 0.85) * e, sc = (1 - f * 0.3) * (0.55 + 0.45 * e), x = cx + R * Math.cos(rad(a)), y = cy + R * Math.sin(rad(a));
+                    const isSel = item.id === this.activeId, isFocus = Math.abs(a) < step / 2;
+                    pill.style.transform = `translate(${x}px,${y}px) translate(0,-50%) scale(${sc})`;
+                    pill.style.opacity = op; pill.style.pointerEvents = op > 0.2 ? "auto" : "none";
+                    pill.classList.toggle("sel", isSel); pill.classList.toggle("focus", isFocus);
+                    const an = anchor(k), ex = x - 10, mx = (an.x + ex) / 2, p = this.paths[slot];
+                    p.setAttribute("d", `M${an.x} ${an.y} C${mx} ${an.y},${mx} ${y},${ex} ${y}`);
+                    p.style.opacity = op * (isSel || this.hotAll ? 1 : 0.6);
+                    p.classList.toggle("hot", isSel || this.hotAll); p.classList.toggle("focus", isFocus);
+                }
+                this.pills.forEach((p, i) => { if (!used.has(i)) { p.style.opacity = 0; p.style.pointerEvents = "none"; this.paths[i].style.opacity = 0; } });
+            }
+        }
+
+        let w1, w2, hubEl;
+        function build() {
+            const c = el(`<div class="node central"><div class="t" id="hubT"></div>
+    <div class="orbwrap"><i class="ring"></i><i class="ring r2"></i><div class="orb" title="Show server overview">${icon("server")}</div></div>
+    <small>${icon("radar")} <span id="hubS"></span></small></div>`);
+            stage.append(c); hubEl = c;
+            $("#hubT").textContent = "Pypiserver"; $("#hubS").textContent = "Server";
+            c.querySelector(".orb").onclick = () => closePackage();
+            w1 = new Wheel({
+                kind: "pkg", R: 200, step: 13,
+                render: (p, it) => { p.querySelector(".nm").textContent = it.label; p.querySelector("em").textContent = (DB.versions[it.id] || []).length; }
+            });
+            w2 = new Wheel({
+                kind: "ver", R: 170, step: 14, hotAll: true,
+                render: (p, it, k) => { p.querySelector(".nm").textContent = it.label; p.querySelector("em").textContent = k === 0 ? "latest" : ""; p.querySelector("em").style.display = k === 0 ? "" : "none"; }
+            });
+            w1.onPick = (it) => pickPackage(it); w2.onPick = (it) => pickVersion(it);
+            w1.vis = 0; w1.visTarget = 1;
+        }
+
+        /* ===== LAYOUT (everything is calculated from the size of the area) ===== */
+        function layout() {
+            const W = Math.max(L.minW, graph.clientWidth / scale), H = Math.max(L.minH, graph.clientHeight / scale - 2);
+            stage.style.width = W + "px"; stage.style.height = H + "px";
+            wrap.style.width = W * scale + "px"; wrap.style.height = H * scale + "px";
+            stage.style.transform = `scale(${scale})`;
+            svg.setAttribute("width", W); svg.setAttribute("height", H);
+            hub.x = Math.max(130, W * 0.12); hub.y = H / 2;
+            hubEl.style.left = hub.x + "px"; hubEl.style.top = hub.y + "px";
+            const R1 = clamp(H * 0.34, 150, 230), cx2 = hub.x + R1 + 190 + 60;
+            Object.assign(w1, { cx: hub.x, cy: hub.y, R: R1 });
+            Object.assign(w2, { cx: cx2, cy: hub.y, R: clamp(W - cx2 - 130, 110, 230) });
+            const hint = $("#hint"); hint.style.left = cx2 + w2.R - 60 + "px"; hint.style.top = hub.y + "px";
+            const em = $("#empty"); em.style.left = hub.x + R1 - 40 + "px"; em.style.top = hub.y + "px";
+        }
+
+        function frame(t) {
+            const dt = Math.min(0.05, (t - (frame.t || t)) / 1000); frame.t = t;
+            [w1, w2].forEach((w) => { w.vis += (w.visTarget - w.vis) * Math.min(1, dt * 7); if (w.visTarget === 1 && w.vis > 0.995) w.vis = 1; w.update(dt); });
+            w1.draw(() => ({ x: hub.x + 50, y: hub.y }));
+            w2.draw(() => { const i = selPkg ? w1.indexOfId(selPkg.id) : -1; return i < 0 ? { x: hub.x + 50, y: hub.y } : w1.rightEdge(i); });
+            requestAnimationFrame(frame);
+        }
+
+        /* ===== SELECTION ===== */
+        function applyFilter(q = $("#filter").value) {
+            const s = q.trim().toLowerCase();
+            view = DB.pkgs.filter((p) => !s || String(p.label).toLowerCase().includes(s));
+            w1.setItems(view); w1.activeId = selPkg ? selPkg.id : null;
+            const k = selPkg ? w1.indexOfId(selPkg.id) : -1; if (k >= 0) w1.toFront(k);
+            const vTotal = DB.pkgs.reduce((a, p) => a + (DB.versions[p.id] || []).length, 0);
+            $("#count").innerHTML = `<b>${view.length}</b> / ${DB.pkgs.length} packages · <b>${vTotal}</b> versions`;
+            const em = $("#empty"); em.classList.toggle("gone", view.length > 0);
+            if (!view.length) em.textContent = DB.pkgs.length ? "No package matches your filter" : "No packages found on the server";
+            $("#hint").classList.toggle("gone", !!selPkg || !view.length);
+        }
+        function pickPackage(p) {
+            if (selPkg && selPkg.id === p.id) { closePackage(); return; }
+            selPkg = p; selVer = null; w1.activeId = p.id; w2.activeId = null;
+            w2.setItems(DB.versions[p.id] || []); w2.vis = 0; w2.visTarget = 1;
+            $("#hint").classList.add("gone"); renderPanel();
+        }
+        function closePackage() {
+            selPkg = null; selVer = null; w1.activeId = null; w2.activeId = null; w2.visTarget = 0;
+            $("#hint").classList.toggle("gone", !view.length); renderPanel();
+        }
+        function pickVersion(v) { selVer = selVer && selVer.id === v.id ? null : v; w2.activeId = selVer ? selVer.id : null; renderPanel(); }
+
+        /* ===== RIGHT PANEL ===== */
+        function countUp(node, to, dec = 0) {
+            if (REDUCED) { node.textContent = to.toFixed(dec); return; }
+            const t0 = performance.now();
+            (function s(t) { const k = Math.min(1, (t - t0) / 700); node.textContent = (to * (1 - Math.pow(1 - k, 3))).toFixed(dec); if (k < 1) requestAnimationFrame(s); })(t0);
+        }
+        const stat = (ic, val, label, dec = 0) => `<div class="stat">${icon(ic)}${typeof val === "number" ? `<b data-to="${val}" data-d="${dec}">0</b>` : `<b title="${esc(val)}">${esc(val)}</b>`}<span>${label}</span></div>`;
+        const bigSize = (bytes) => { const s = fmtSize(bytes); return s.none ? "—" : `<span data-to="${s.v}" data-d="${s.d}">0</span><small>${s.u}</small>`; };
+        function setBars(rows) {
+            const box = $("#pBars"), vals = rows.map((r) => r[1]); box.style.display = rows.length && Math.max(...vals) > 0 ? "" : "none";
+            const mx = Math.max(1, ...vals);
+            box.innerHTML = rows.map((r) => `<div><i style="height:0" data-h="${Math.max(6, r[1] / mx * 44)}"></i><span title="${esc(r[0])}">${esc(r[0])}</span></div>`).join("");
+        }
+        function renderPanel() {
+            const set = (id, t) => ($(id).textContent = t), badge = (t, c) => { set("#pStatus", t); $("#pStatus").className = "badge " + c; };
+            let cmd, cmdT, note = "";
+            if (!selPkg) {
+                const vs = DB.pkgs.reduce((a, p) => a + (DB.versions[p.id] || []).length, 0), total = DB.pkgs.reduce((a, p) => a + sizeOfPkg(p), 0);
+                const files = DB.pkgs.reduce((a, p) => a + (p.files_count || 0), 0);
+                $("#pSector").innerHTML = icon("server") + " Server"; set("#pTitle", "Pypiserver"); set("#pSub", "Central package repository");
+                badge(DB.demo ? "Demo data" : "Online", DB.demo ? "gold" : "success"); set("#pUpd", `${DB.pkgs.length} packages · ${vs} versions`);
+                set("#pBigT", "Total size"); set("#pLabel", "All packages"); $("#pRate").innerHTML = bigSize(total);
+                setBars([...DB.pkgs].sort((a, b) => sizeOfPkg(b) - sizeOfPkg(a)).slice(0, 3).map((p) => [p.label, sizeOfPkg(p)]));
+                $("#pStats").innerHTML = stat("box", DB.pkgs.length, "Packages") + stat("tag", vs, "Versions") + stat("file", files || vs, "Files") + stat("net", DB.pkgs.length ? vs / DB.pkgs.length : 0, "Versions per package", 1);
+                cmdT = "Install from this server"; cmd = `pip install --index-url ${ORIGIN}/simple/ <package>`; note = "Select a package from the wheel to see its versions.";
+            } else {
+                const p = selPkg, vs = DB.versions[p.id] || [], v = selVer, idx = v ? vs.findIndex((x) => x.id === v.id) : -1;
+                $("#pSector").innerHTML = icon(v ? "tag" : "box") + (v ? " Version" : " Python package");
+                set("#pTitle", v ? `${p.label} ${v.label}` : p.label);
+                set("#pSub", v ? `Version ${vs.length - idx} of ${vs.length}` : `${vs.length} versions · latest ${vs[0] ? vs[0].label : "n/a"}`);
+                const stamp = v ? v.last_updated : p.last_updated;
+                if (v && idx === 0) badge("Latest", "gold"); else badge("Active", "success");
+                set("#pUpd", stamp ? "Last updated: " + stamp : "No update date");
+                const sz = v ? v.size : sizeOfPkg(p);
+                set("#pBigT", v ? "Version size" : "Package size"); set("#pLabel", v ? v.label : "All versions"); $("#pRate").innerHTML = bigSize(sz);
+                setBars(vs.slice(0, 4).reverse().map((x) => [x.label, x.size || 0]));
+                $("#pStats").innerHTML = v
+                    ? stat("file", v.files_count ?? "—", "Files") + stat("svc", `${vs.length - idx}/${vs.length}`, "Position") + stat("shield", idx, "Newer versions") + stat("net", stamp || "—", "Released")
+                    : stat("tag", vs.length, "Versions") + stat("file", p.files_count ?? "—", "Files") + stat("spark", vs[0] ? vs[0].label : "—", "Latest") + stat("shield", vs.length ? vs[vs.length - 1].label : "—", "Oldest");
+                cmdT = v ? "Install this version" : "Install command"; cmd = `pip install --index-url ${ORIGIN}/simple/ ${p.label}${v ? "==" + v.label : ""}`;
+                note = v ? "Click the version again to go back to the package." : "Spin the versions wheel and click one for its install command.";
+            }
+            set("#pCmdT", cmdT); set("#pCmd", cmd); set("#pAiT", note);
+            document.querySelectorAll("#panel [data-to]").forEach((n) => countUp(n, +n.dataset.to, +(n.dataset.d || 0)));
+            requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll("#pBars i").forEach((i) => (i.style.height = i.dataset.h + "px"))));
+            const pn = $("#panel"); pn.classList.remove("swap"); void pn.offsetWidth; pn.classList.add("swap");
+        }
+        $("#copyCmd").onclick = () => {
+            const t = $("#pCmd").textContent, b = $("#copyCmd");
+            (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { b.innerHTML = icon("check"); toast("Command copied"); setTimeout(() => (b.innerHTML = icon("copy")), 1400); }, () => toast("Copy failed"));
+        };
+
+        /* ===== WHEEL CONTROLS ===== */
+        const gx = (e) => (e.clientX - graph.getBoundingClientRect().left + graph.scrollLeft) / scale;
+        const wheelAt = (x) => (w2.visTarget && w2.vis > 0.3 && x > w2.cx - 20) ? w2 : (view.length && x > w1.cx + 40 ? w1 : null);
+        const activeWheel = () => (selPkg && w2.visTarget ? w2 : w1);
+        graph.addEventListener("wheel", (e) => { const w = wheelAt(gx(e)); if (!w) return; e.preventDefault(); w.spin(e.deltaY * 0.13); }, { passive: false });
+        let drag = null;
+        graph.addEventListener("pointerdown", (e) => {
+            if (e.target.closest(".orb")) return;
+            const pill = e.target.closest(".term"), w = pill ? pill._wheel : wheelAt(gx(e)); if (!w) return;
+            drag = { w, y: e.clientY, y0: e.clientY, moved: false, id: e.pointerId, pill, tm: performance.now() };
+        });
+        graph.addEventListener("pointermove", (e) => {
+            const r = graph.getBoundingClientRect(); graph.style.setProperty("--mx", e.clientX - r.left + "px"); graph.style.setProperty("--my", e.clientY - r.top + "px");
+            if (!drag) return;
+            if (!drag.moved && Math.abs(e.clientY - drag.y0) > 4) { drag.moved = true; drag.w.drag = true; drag.w.target = null; graph.setPointerCapture(drag.id); }
+            if (!drag.moved) return;
+            const w = drag.w, now = performance.now(), d = -((e.clientY - drag.y) / scale) / w.R * 180 / Math.PI;
+            w.rot = clamp(w.rot + d, -w.step * 0.5, w.max() + w.step * 0.5);
+            w.vel = clamp(w.vel * 0.6 + (d / Math.max((now - drag.tm) / 1000, 0.008)) * 0.4, -600, 600);
+            drag.y = e.clientY; drag.tm = now;
+        });
+        const endDrag = () => {
+            if (!drag) return;
+            const { w, pill, moved } = drag;
+            if (!moved && pill && pill._k != null) { w.toFront(pill._k); w.onPick(w.items[pill._k]); }
+            if (performance.now() - drag.tm > 90) w.vel = 0;
+            w.drag = false; drag = null;
+        };
+        graph.addEventListener("pointerup", endDrag); graph.addEventListener("pointercancel", endDrag);
+        graph.addEventListener("keydown", (e) => {
+            const w = activeWheel();
+            if (e.key === "ArrowUp") { e.preventDefault(); w.stepBy(1); }
+            if (e.key === "ArrowDown") { e.preventDefault(); w.stepBy(-1); }
+            if (e.key === "Enter") { const k = clamp(Math.round(w.rot / w.step), 0, w.items.length - 1); if (w.items[k]) w.onPick(w.items[k]); }
+        });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (selVer) pickVersion(selVer); else if (selPkg) closePackage(); } });
+        $("#filter").addEventListener("input", (e) => applyFilter(e.target.value));
+
+        /* ===== SMALL ASSISTANT (works on your local data) ===== */
+        function ask(q) {
+            const s = q.trim().toLowerCase(); if (!s) return "";
+            if (/^(total|summary|stats)/.test(s)) { const vs = DB.pkgs.reduce((a, p) => a + (DB.versions[p.id] || []).length, 0); return `${DB.pkgs.length} packages and ${vs} versions on this server.`; }
+            const m = s.match(/^(latest|versions?|size)\s+(.+)$/), name = m ? m[2] : s;
+            const p = DB.pkgs.find((x) => String(x.label).toLowerCase() === name) || DB.pkgs.find((x) => String(x.label).toLowerCase().includes(name));
+            if (!p) return `No package matches “${q}”. Try a package name, or type “total”.`;
+            if (!view.includes(p)) { $("#filter").value = ""; applyFilter(""); }
+            if (!selPkg || selPkg.id !== p.id) pickPackage(p);
+            w1.toFront(w1.indexOfId(p.id));
+            const vs = DB.versions[p.id] || [], sz = fmtSize(sizeOfPkg(p));
+            if (m && m[1] === "size") return `${p.label}: ${sz.none ? "size not available" : sz.v + " " + sz.u}.`;
+            return `${p.label}: ${vs.length} versions, latest ${vs[0] ? vs[0].label : "n/a"}.`;
+        }
+        function send() {
+            const q = $("#q"), v = q.value.trim(), log = $("#log"); if (!v) return;
+            const m = el(`<div class="msg me"></div>`); m.textContent = v; log.append(m);
+            const r = el(`<div class="msg"></div>`); r.textContent = ask(v); log.append(r); log.scrollTop = log.scrollHeight; q.value = "";
+        }
+        $("#send").onclick = send; $("#q").onkeydown = (e) => e.key === "Enter" && send();
+
+        /* ===== TOOLBAR ===== */
+        const zoom = (d) => { scale = clamp(+(scale + d).toFixed(2), 0.5, 2); layout(); };
+        document.querySelectorAll("[data-tool]").forEach((b) => (b.onclick = () => {
+            const t = b.dataset.tool;
+            if (t === "zoom-in") zoom(0.15); else if (t === "zoom-out") zoom(-0.15);
+            else if (t === "fullscreen") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+            else if (t === "share") navigator.clipboard?.writeText(location.href).then(() => toast("Link copied"), () => toast("Copy failed"));
+            else toast("Coming soon");
+        }));
+
+        /* ===== COLORS (saved in the browser) ===== */
+        const PRESETS = [["#8b7cff", "#e8c27a", "#ff6b9a"], ["#4da3ff", "#7ee0ff", "#ff8fa3"], ["#2fd6a1", "#e8e27a", "#ff7a7a"], ["#ff6b9a", "#ffc27a", "#ffb86b"], ["#ff9f43", "#ffd86b", "#ff6b6b"]];
+        const KEY = "pypi-colors", root = document.documentElement, VARS = ["--bg", "--accent", "--gold", "--pink"];
+        const saved = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+        const store = (o) => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch { } };
+        function syncInputs() { const cs = getComputedStyle(root); document.querySelectorAll("#palette input[type=color]").forEach((i) => { const v = cs.getPropertyValue(i.dataset.var).trim(); if (/^#[0-9a-f]{6}$/i.test(v)) i.value = v; }); }
+        function applyColors(o) { if (o.theme) root.dataset.theme = o.theme; VARS.forEach((k) => o[k] && root.style.setProperty(k, o[k])); syncInputs(); }
+        function initPalette() {
+            $("#presets").innerHTML = PRESETS.map((p, i) => `<button class="sw" data-p="${i}" title="Preset ${i + 1}" style="background:linear-gradient(135deg,${p[0]} 50%,${p[1]} 50%)"></button>`).join("");
+            document.querySelectorAll(".sw").forEach((b) => (b.onclick = () => { const [a, g, h] = PRESETS[b.dataset.p], o = { ...saved(), "--accent": a, "--gold": g, "--pink": h }; store(o); applyColors(o); }));
+            document.querySelectorAll("#palette input[type=color]").forEach((i) => (i.oninput = () => { root.style.setProperty(i.dataset.var, i.value); store({ ...saved(), [i.dataset.var]: i.value }); }));
+            $("#themeBtn").onclick = () => { const next = root.dataset.theme === "light" ? "dark" : "light"; root.style.removeProperty("--bg"); const o = { ...saved(), theme: next }; delete o["--bg"]; store(o); root.dataset.theme = next; syncInputs(); };
+            $("#resetBtn").onclick = () => { try { localStorage.removeItem(KEY); } catch { } root.removeAttribute("data-theme"); VARS.forEach((k) => root.style.removeProperty(k)); syncInputs(); };
+            $("#paletteBtn").onclick = (e) => { e.stopPropagation(); $("#palette").hidden = !$("#palette").hidden; };
+            document.addEventListener("click", (e) => { if (!e.target.closest(".pop-wrap")) $("#palette").hidden = true; });
+        }
+
+        /* ===== START ===== */
+        async function loadData() {
+            $("#empty").textContent = "Loading packages..."; $("#empty").classList.remove("gone");
+            try {
+                const res = await fetch("/api/graph");
+                if (!res.ok) throw new Error("Server returned " + res.status);
+
+                const data = await res.json();
+                ingest(data);
+                DB.demo = false;
+                $("#notice").textContent = "Package repository overview – pick a package, then spin its versions";
+
+            } catch (err) {
+                console.error("Error loading data:", err);
+                // إذا فشل الاتصال، لا نعرض بيانات وهمية، بل نعرض صفر حزم
+                DB.pkgs = [];
+                DB.versions = {};
+                DB.demo = false;
+                $("#notice").textContent = "⚠️ Could not connect to the server. Please check if Docker is running.";
+
+                // إظهار رسالة في الشاشة
+                const em = $("#empty");
+                em.textContent = "Failed to connect to the API.";
+                em.classList.remove("gone");
+            }
+
+            selPkg = null; selVer = null; w2.visTarget = 0; w2.activeId = null;
+            applyFilter(); renderPanel();
+        }
+
+
+        paintIcons(); build(); initPalette(); applyColors(saved()); layout();
+        new ResizeObserver(layout).observe(graph);
+        $("#reloadBtn").onclick = () => loadData().then(() => toast("Data reloaded"));
+        loadData(); requestAnimationFrame(frame);
+    </script>
 </body>
 
 </html>
