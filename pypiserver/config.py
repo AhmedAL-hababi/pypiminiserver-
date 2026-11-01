@@ -120,7 +120,7 @@ class DEFAULTS:
     LOG_REQ_FRMT = "%(bottle.request)s"
     LOG_RES_FRMT = "%(status)s"
     LOG_STREAM = sys.stdout
-    PACKAGE_DIRECTORIES = [pathlib.Path("C:/Users/Owner/Desktop/my-packages").resolve()]
+    PACKAGE_DIRECTORIES = [pathlib.Path("~/packages").expanduser().resolve()]
     PORT = 8080
     SERVER_METHOD = "auto"
     BACKEND = "auto"

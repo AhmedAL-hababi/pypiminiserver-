@@ -1,1 +1,0 @@
-export interface Entity { id: string; name: string; flag: string; count: number; parentId: string }

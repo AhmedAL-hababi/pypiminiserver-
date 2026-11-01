@@ -1,1 +1,0 @@
-export interface Stat { id: string; icon: string; value: number; label: string }
